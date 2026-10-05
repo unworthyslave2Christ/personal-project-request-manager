@@ -5,7 +5,6 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { projectRequestSchema, type ProjectRequestInput } from "@/app/schemas";
 import { useSession } from "next-auth/react";
-import { useFirebaseAuth } from "@/components/firebase-auth-provider";
 import { createProject, updateProject } from "@/lib/project-requests-client";
 
 const fieldClass =
@@ -18,8 +17,7 @@ export function ProjectRequestForm({
   projectId?: string;
   defaultValues?: Partial<ProjectRequestInput>;
 }) {
-  const { status } = useSession();
-  const { user: firebaseUser } = useFirebaseAuth();
+  const { status, data: session } = useSession();
   const [serverError, setServerError] = useState("");
   const [saved, setSaved] = useState(false);
   const {
@@ -43,15 +41,13 @@ export function ProjectRequestForm({
   async function submit(values: ProjectRequestInput) {
     setServerError("");
     setSaved(false);
-    if (status !== "authenticated" || !firebaseUser) {
-      setServerError(
-        "Your Firebase session is still loading. Please try again.",
-      );
+    if (status !== "authenticated" || !session?.user?.id) {
+      setServerError("You must be signed in to save a project request.");
       return;
     }
     try {
-      if (projectId) await updateProject(projectId, firebaseUser.uid, values);
-      else await createProject(firebaseUser.uid, values);
+      if (projectId) await updateProject(projectId, session.user.id, values);
+      else await createProject(session.user.id, values);
       setSaved(true);
       if (!projectId) window.location.href = "/portal";
     } catch (error) {

@@ -40,49 +40,7 @@ export default async function HomePage() {
               </a>
             </div>
           </div>
-          <div className="relative">
-            <div className="rounded-[2rem] bg-slate-950 p-3 shadow-2xl shadow-slate-950/20">
-              <div className="rounded-[1.5rem] bg-white p-6 sm:p-8">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm font-bold text-slate-950">
-                    Project pipeline
-                  </span>
-                  <span className="rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-bold text-emerald-700">
-                    Live
-                  </span>
-                </div>
-                <div className="mt-7 space-y-3">
-                  <div className="rounded-xl border border-slate-200 p-4">
-                    <div className="flex justify-between text-sm font-bold">
-                      <span>Website redesign</span>
-                      <span className="text-blue-600">New</span>
-                    </div>
-                    <div className="mt-2 h-2 rounded-full bg-slate-100">
-                      <div className="h-2 w-1/4 rounded-full bg-blue-500" />
-                    </div>
-                  </div>
-                  <div className="rounded-xl border border-slate-200 p-4">
-                    <div className="flex justify-between text-sm font-bold">
-                      <span>Client dashboard</span>
-                      <span className="text-amber-600">Reviewing</span>
-                    </div>
-                    <div className="mt-2 h-2 rounded-full bg-slate-100">
-                      <div className="h-2 w-1/2 rounded-full bg-amber-500" />
-                    </div>
-                  </div>
-                  <div className="rounded-xl border border-slate-200 p-4">
-                    <div className="flex justify-between text-sm font-bold">
-                      <span>Brand launch</span>
-                      <span className="text-emerald-600">Completed</span>
-                    </div>
-                    <div className="mt-2 h-2 rounded-full bg-slate-100">
-                      <div className="h-2 w-full rounded-full bg-emerald-500" />
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
+         
         </div>
       </section>
       <section

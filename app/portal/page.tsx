@@ -4,25 +4,25 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import { AuthGuard } from "@/components/auth-guard";
-import { useFirebaseAuth } from "@/components/firebase-auth-provider";
 import {
   listProjects,
   type ProjectRequest,
 } from "@/lib/project-requests-client";
 import { ProjectCard } from "@/components/project-card";
 
+
+
 function PortalContent() {
   const { data: session } = useSession();
-  const { user } = useFirebaseAuth();
   const [projects, setProjects] = useState<ProjectRequest[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
   useEffect(() => {
-    if (!user) return;
+    if (!session?.user?.id) return;
     let active = true;
     setLoading(true);
-    listProjects(user.uid)
+    listProjects(session.user.id)
       .then((items) => {
         if (active) setProjects(items);
       })
@@ -40,7 +40,7 @@ function PortalContent() {
     return () => {
       active = false;
     };
-  }, [user]);
+  }, [session?.user?.id]);
 
   const firstName = session?.user?.name?.split(" ")[0] ?? "there";
 

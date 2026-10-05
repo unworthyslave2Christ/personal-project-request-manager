@@ -3,24 +3,24 @@
 import Link from "next/link";
 import { use, useEffect, useState } from "react";
 import { AuthGuard } from "@/components/auth-guard";
-import { useFirebaseAuth } from "@/components/firebase-auth-provider";
+import { useSession } from "next-auth/react";
 import { getProject, type ProjectRequest } from "@/lib/project-requests-client";
 import { ProjectRequestForm } from "@/components/project-request-form";
 import { DeleteProjectButton } from "@/components/delete-project-button";
 
 function ProjectDetailContent({ id }: { id: string }) {
-  const { user } = useFirebaseAuth();
+  const { data: session } = useSession();
   const [project, setProject] = useState<ProjectRequest | null>(null);
   const [loading, setLoading] = useState(true);
   const [missing, setMissing] = useState(false);
 
   useEffect(() => {
-    if (!user) return;
-    getProject(id, user.uid).then((item) => {
+    if (!session?.user?.id) return;
+    getProject(id, session.user.id).then((item) => {
       setProject(item);
       setMissing(!item);
     }).finally(() => setLoading(false));
-  }, [id, user]);
+  }, [id, session?.user?.id]);
 
   if (loading) return <main className="mx-auto max-w-4xl px-5 py-20 text-sm text-slate-500 lg:px-8">Loading project…</main>;
   if (missing || !project) return <main className="mx-auto max-w-4xl px-5 py-20 lg:px-8"><h1 className="text-3xl font-black">Project not found</h1><Link href="/portal" className="mt-4 inline-flex text-sm font-semibold text-slate-600 hover:text-slate-950">← Back to projects</Link></main>;

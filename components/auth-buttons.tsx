@@ -23,7 +23,6 @@ export function SignInButton({ compact = false }: { compact?: boolean }) {
 
 export function SignOutButton() {
   async function handleSignOut() {
-    // await firebaseSignOut(firebaseAuth);
     await signOut({ redirectTo: "/" });
   }
 

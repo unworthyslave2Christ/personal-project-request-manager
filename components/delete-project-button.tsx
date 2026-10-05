@@ -1,22 +1,22 @@
 "use client";
 
 import { useState } from "react";
-import { useFirebaseAuth } from "@/components/firebase-auth-provider";
+import { useSession } from "next-auth/react";
 import { deleteProject } from "@/lib/project-requests-client";
 
 export function DeleteProjectButton({ id }: { id: string }) {
-  const { user } = useFirebaseAuth();
+  const { data: session } = useSession();
   const [pending, setPending] = useState(false);
 
   async function handleDelete() {
     if (
-      !user ||
+      !session?.user?.id ||
       !window.confirm("Delete this project request? This cannot be undone.")
     )
       return;
     setPending(true);
     try {
-      await deleteProject(id, user.uid);
+      await deleteProject(id, session.user.id);
       window.location.href = "/portal";
     } finally {
       setPending(false);
