@@ -1,0 +1,30 @@
+import type { Metadata } from "next";
+import { AuthProvider } from "@/components/auth-provider";
+import { SiteHeader } from "@/components/site-header";
+import "./globals.css";
+
+export const metadata: Metadata = {
+  title: "Client Project Portal",
+  description: "A secure project intake and client request portal.",
+};
+
+export default function RootLayout({
+  children,
+}: Readonly<{ children: React.ReactNode }>) {
+  return (
+    <html lang="en">
+      <body className="min-h-screen bg-slate-50 text-slate-950 antialiased">
+        <AuthProvider>
+          <SiteHeader />
+          {children}
+          <footer className="border-t border-slate-200 bg-white">
+            <div className="mx-auto flex max-w-7xl flex-col gap-2 px-5 py-8 text-sm text-slate-500 sm:flex-row sm:items-center sm:justify-between lg:px-8">
+              <span>Client Project Portal</span>
+              <span>Built as a production-ready Next.js capstone.</span>
+            </div>
+          </footer>
+        </AuthProvider>
+      </body>
+    </html>
+  );
+}
