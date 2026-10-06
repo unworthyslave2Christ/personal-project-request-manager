@@ -4,6 +4,7 @@ import { redirect, notFound } from "next/navigation";
 import { getProject } from "@/lib/project-requests";
 import { ProjectRequestForm } from "@/components/project-request-form";
 import { DeleteProjectButton } from "@/components/delete-project-button";
+import { ProjectStatusPanel } from "@/components/project-status-panel";
 
 export default async function ProjectDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const session = await auth();
@@ -23,7 +24,9 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
         </div>
         <DeleteProjectButton id={project.id} />
       </div>
-      <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
+      <ProjectStatusPanel project={project} />
+
+      <div className="mt-6 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
         <ProjectRequestForm
           projectId={project.id}
           defaultValues={{

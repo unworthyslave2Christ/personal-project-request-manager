@@ -1,7 +1,36 @@
-import type { DocumentData, Timestamp } from "firebase-admin/firestore";
+import type { DocumentData, Timestamp, Transaction } from "firebase-admin/firestore";
 import { adminDb } from "@/lib/firebase-admin";
 
-export type ProjectStatus = "new" | "reviewing" | "approved" | "completed";
+export const PROJECT_STATUSES = [
+  "new",
+  "reviewing",
+  "approved",
+  "in_progress",
+  "on_hold",
+  "completed",
+  "cancelled",
+] as const;
+
+export type ProjectStatus = (typeof PROJECT_STATUSES)[number];
+
+export const PROJECT_STATUS_META: Record<
+  ProjectStatus,
+  { label: string; description: string }
+> = {
+  new: { label: "New", description: "Request submitted" },
+  reviewing: { label: "Reviewing", description: "Request is being reviewed" },
+  approved: { label: "Approved", description: "Request has been approved" },
+  in_progress: { label: "In Progress", description: "Work is underway" },
+  on_hold: { label: "On Hold", description: "Work is temporarily paused" },
+  completed: { label: "Completed", description: "Project request completed" },
+  cancelled: { label: "Cancelled", description: "Request was cancelled" },
+};
+
+export type ProjectStatusHistoryItem = {
+  status: ProjectStatus;
+  changedAt: Date;
+  changedBy: string;
+};
 
 export type ProjectRequest = {
   id: string;
@@ -13,6 +42,7 @@ export type ProjectRequest = {
   timeline: string;
   description: string;
   status: ProjectStatus;
+  statusHistory: ProjectStatusHistoryItem[];
   ownerId: string;
   ownerEmail?: string;
   createdAt: Date;
@@ -21,21 +51,22 @@ export type ProjectRequest = {
 
 export type ProjectRequestInput = Omit<
   ProjectRequest,
-  "id" | "ownerId" | "ownerEmail" | "status" | "createdAt" | "updatedAt"
+  | "id"
+  | "ownerId"
+  | "ownerEmail"
+  | "status"
+  | "statusHistory"
+  | "createdAt"
+  | "updatedAt"
 >;
 
-type Owner = {
-  id: string;
-  email?: string | null;
-};
+type Owner = { id: string; email?: string | null };
 
 function normalizeEmail(email: string | null | undefined) {
   return email?.trim().toLowerCase() || null;
 }
 
 export function getStableOwnerId(_email: string | null | undefined, fallbackId: string) {
-  // auth.ts assigns session.user.id from Google's stable providerAccountId.
-  // Keep that value as the canonical owner key.
   return fallbackId;
 }
 
@@ -52,7 +83,34 @@ function toDate(value: unknown) {
   return new Date();
 }
 
+function isProjectStatus(value: unknown): value is ProjectStatus {
+  return typeof value === "string" && PROJECT_STATUSES.includes(value as ProjectStatus);
+}
+
+function mapHistory(value: unknown, fallbackStatus: ProjectStatus, createdAt: Date): ProjectStatusHistoryItem[] {
+  if (!Array.isArray(value)) {
+    return [{ status: fallbackStatus, changedAt: createdAt, changedBy: "System" }];
+  }
+
+  return value
+    .map((item) => {
+      if (!item || typeof item !== "object") return null;
+      const record = item as Record<string, unknown>;
+      const status = isProjectStatus(record.status) ? record.status : null;
+      if (!status) return null;
+      return {
+        status,
+        changedAt: toDate(record.changedAt),
+        changedBy: typeof record.changedBy === "string" ? record.changedBy : "System",
+      };
+    })
+    .filter((item): item is ProjectStatusHistoryItem => item !== null);
+}
+
 function mapDoc(id: string, data: DocumentData): ProjectRequest {
+  const createdAt = toDate(data.createdAt);
+  const status = isProjectStatus(data.status) ? data.status : "new";
+
   return {
     id,
     fullName: data.fullName,
@@ -62,20 +120,15 @@ function mapDoc(id: string, data: DocumentData): ProjectRequest {
     budget: data.budget,
     timeline: data.timeline,
     description: data.description,
-    status: data.status,
+    status,
+    statusHistory: mapHistory(data.statusHistory, status, createdAt),
     ownerId: data.ownerId,
     ownerEmail: data.ownerEmail,
-    createdAt: toDate(data.createdAt),
+    createdAt,
     updatedAt: toDate(data.updatedAt),
   };
 }
 
-/**
- * Older versions of the project used either Auth.js user.id or Firebase uid
- * as ownerId. The current version uses Google's stable provider account ID as the
- * application owner key. Existing records whose form email matches the
- * signed-in Google email are migrated once they are encountered.
- */
 async function migrateLegacyProjects(owner: Owner, stableOwnerId: string) {
   const email = normalizeEmail(owner.email);
   if (!email) return;
@@ -93,11 +146,7 @@ async function migrateLegacyProjects(owner: Owner, stableOwnerId: string) {
   for (const item of legacySnapshot.docs) {
     const data = item.data();
     if (data.ownerId === stableOwnerId && data.ownerEmail === email) continue;
-
-    // Do not take over a document already owned by a different stable email.
-    if (typeof data.ownerEmail === "string" && normalizeEmail(data.ownerEmail) !== email) {
-      continue;
-    }
+    if (typeof data.ownerEmail === "string" && normalizeEmail(data.ownerEmail) !== email) continue;
 
     batch.update(item.ref, {
       ownerId: stableOwnerId,
@@ -151,14 +200,17 @@ export async function getProject(id: string, owner: Owner) {
 export async function createProject(owner: Owner, data: ProjectRequestInput) {
   const normalizedEmail = normalizeEmail(owner.email);
   const ownerId = getStableOwnerId(owner.email, owner.id);
+  const now = new Date();
+  const changedBy = normalizedEmail ?? owner.id;
 
   const ref = await adminDb.collection("projectRequests").add({
     ...data,
     ownerId,
     ...(normalizedEmail ? { ownerEmail: normalizedEmail } : {}),
     status: "new",
-    createdAt: new Date(),
-    updatedAt: new Date(),
+    statusHistory: [{ status: "new", changedAt: now, changedBy }],
+    createdAt: now,
+    updatedAt: now,
   });
 
   return ref.id;
@@ -176,6 +228,40 @@ export async function updateProject(id: string, owner: Owner, data: ProjectReque
     ownerId: getStableOwnerId(owner.email, owner.id),
     ...(normalizeEmail(owner.email) ? { ownerEmail: normalizeEmail(owner.email) } : {}),
     updatedAt: new Date(),
+  });
+}
+
+export async function updateProjectStatus(
+  id: string,
+  owner: Owner,
+  status: ProjectStatus,
+) {
+  if (!PROJECT_STATUSES.includes(status)) throw new Error("Invalid project status.");
+
+  const ref = adminDb.collection("projectRequests").doc(id);
+  const now = new Date();
+  const changedBy = normalizeEmail(owner.email) ?? owner.id;
+
+  await adminDb.runTransaction(async (transaction: Transaction) => {
+    const current = await transaction.get(ref);
+    if (!current.exists || !(await ownerMatches(current.data(), owner))) {
+      throw new Error("Project not found.");
+    }
+
+    const data = current.data()!;
+    const currentStatus = isProjectStatus(data.status) ? data.status : "new";
+    if (currentStatus === status) return;
+
+    const history = Array.isArray(data.statusHistory)
+      ? [...data.statusHistory]
+      : [{ status: currentStatus, changedAt: data.createdAt ?? now, changedBy: "System" }];
+    history.push({ status, changedAt: now, changedBy });
+
+    transaction.update(ref, {
+      status,
+      statusHistory: history,
+      updatedAt: now,
+    });
   });
 }
 

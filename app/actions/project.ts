@@ -6,6 +6,9 @@ import {
   createProject,
   deleteProject,
   updateProject,
+  updateProjectStatus,
+  PROJECT_STATUSES,
+  type ProjectStatus,
 } from "@/lib/project-requests";
 import { revalidatePath } from "next/cache";
 
@@ -47,6 +50,17 @@ export async function updateProjectAction(id: string, input: unknown) {
 export async function deleteProjectAction(id: string) {
   const owner = await requireUser();
   await deleteProject(id, owner);
+  revalidatePath("/portal");
+  revalidatePath(`/portal/${id}`);
+  return { ok: true as const };
+}
+
+export async function updateProjectStatusAction(id: string, status: string) {
+  const owner = await requireUser();
+  if (!PROJECT_STATUSES.includes(status as ProjectStatus)) {
+    throw new Error("Invalid project status.");
+  }
+  await updateProjectStatus(id, owner, status as ProjectStatus);
   revalidatePath("/portal");
   revalidatePath(`/portal/${id}`);
   return { ok: true as const };
