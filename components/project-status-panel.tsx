@@ -6,7 +6,7 @@ import {
   PROJECT_STATUSES,
   type ProjectRequest,
   type ProjectStatus,
-} from "@/lib/project-requests";
+} from "@/lib/project-request-types";
 import { updateProjectStatusAction } from "@/app/actions/project";
 
 const statusClasses: Record<ProjectStatus, string> = {

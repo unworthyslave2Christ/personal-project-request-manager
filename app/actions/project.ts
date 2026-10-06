@@ -7,9 +7,11 @@ import {
   deleteProject,
   updateProject,
   updateProjectStatus,
+} from "@/lib/project-requests";
+import {
   PROJECT_STATUSES,
   type ProjectStatus,
-} from "@/lib/project-requests";
+} from "@/lib/project-request-types";
 import { revalidatePath } from "next/cache";
 
 async function requireUser() {

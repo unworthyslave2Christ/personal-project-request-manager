@@ -1,5 +1,5 @@
 import Link from "next/link";
-import type { ProjectRequest } from "@/lib/project-requests";
+import type { ProjectRequest } from "@/lib/project-request-types";
 
 const statusStyles: Record<string, string> = {
   new: "bg-blue-50 text-blue-700",
