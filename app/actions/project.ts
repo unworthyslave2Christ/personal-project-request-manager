@@ -12,7 +12,11 @@ import { revalidatePath } from "next/cache";
 async function requireUser() {
   const session = await auth();
   if (!session?.user?.id) throw new Error("You must be signed in.");
-  return session.user.id;
+
+  return {
+    id: session.user.id,
+    email: session.user.email,
+  };
 }
 
 function parseInput(input: unknown): ProjectRequestInput {
@@ -24,25 +28,25 @@ function parseInput(input: unknown): ProjectRequestInput {
 }
 
 export async function createProjectAction(input: unknown) {
-  const ownerId = await requireUser();
+  const owner = await requireUser();
   const data = parseInput(input);
-  await createProject(ownerId, data);
+  await createProject(owner, data);
   revalidatePath("/portal");
   return { ok: true as const };
 }
 
 export async function updateProjectAction(id: string, input: unknown) {
-  const ownerId = await requireUser();
+  const owner = await requireUser();
   const data = parseInput(input);
-  await updateProject(id, ownerId, data);
+  await updateProject(id, owner, data);
   revalidatePath("/portal");
   revalidatePath(`/portal/${id}`);
   return { ok: true as const };
 }
 
 export async function deleteProjectAction(id: string) {
-  const ownerId = await requireUser();
-  await deleteProject(id, ownerId);
+  const owner = await requireUser();
+  await deleteProject(id, owner);
   revalidatePath("/portal");
   revalidatePath(`/portal/${id}`);
   return { ok: true as const };

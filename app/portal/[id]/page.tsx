@@ -10,7 +10,7 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
   if (!session?.user?.id) redirect("/");
 
   const { id } = await params;
-  const project = await getProject(id, session.user.id);
+  const project = await getProject(id, { id: session.user.id, email: session.user.email });
   if (!project) notFound();
 
   return (

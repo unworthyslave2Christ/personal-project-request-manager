@@ -4,11 +4,14 @@ import { redirect } from "next/navigation";
 import { listProjects } from "@/lib/project-requests";
 import { ProjectCard } from "@/components/project-card";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 export default async function PortalPage() {
   const session = await auth();
   if (!session?.user?.id) redirect("/");
 
-  const projects = await listProjects(session.user.id);
+  const projects = await listProjects({ id: session.user.id, email: session.user.email });
   const firstName = session.user.name?.split(" ")[0] ?? "there";
 
   return (
