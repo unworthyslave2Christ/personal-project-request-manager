@@ -1,22 +1,16 @@
 "use client";
 
 import { useState } from "react";
-import { useSession } from "next-auth/react";
-import { deleteProject } from "@/lib/project-requests-client";
+import { deleteProjectAction } from "@/app/actions/project";
 
 export function DeleteProjectButton({ id }: { id: string }) {
-  const { data: session } = useSession();
   const [pending, setPending] = useState(false);
 
   async function handleDelete() {
-    if (
-      !session?.user?.id ||
-      !window.confirm("Delete this project request? This cannot be undone.")
-    )
-      return;
+    if (!window.confirm("Delete this project request? This cannot be undone.")) return;
     setPending(true);
     try {
-      await deleteProject(id, session.user.id);
+      await deleteProjectAction(id);
       window.location.href = "/portal";
     } finally {
       setPending(false);

@@ -1,7 +1,12 @@
 "use server";
 
 import { auth } from "@/auth";
-import { projectRequestSchema } from "@/app/schemas";
+import { projectRequestSchema, type ProjectRequestInput } from "@/app/schemas";
+import {
+  createProject,
+  deleteProject,
+  updateProject,
+} from "@/lib/project-requests";
 import { revalidatePath } from "next/cache";
 
 async function requireUser() {
@@ -10,33 +15,35 @@ async function requireUser() {
   return session.user.id;
 }
 
-/**
- * Compatibility Server Actions retained from the original project.
- * Firestore CRUD now runs through the Firebase Web SDK in the client so that
- * Firestore Security Rules receive Firebase Auth context. These actions remain
- * available for server-side validation/revalidation and preserve the original
- * public action API without reintroducing the privileged Admin SDK.
- */
-export async function createProjectAction(input: unknown) {
-  await requireUser();
+function parseInput(input: unknown): ProjectRequestInput {
   const parsed = projectRequestSchema.safeParse(input);
-  if (!parsed.success) return { ok: false, message: parsed.error.issues[0]?.message ?? "Please check the form." };
+  if (!parsed.success) {
+    throw new Error(parsed.error.issues[0]?.message ?? "Please check the form.");
+  }
+  return parsed.data;
+}
+
+export async function createProjectAction(input: unknown) {
+  const ownerId = await requireUser();
+  const data = parseInput(input);
+  await createProject(ownerId, data);
   revalidatePath("/portal");
-  return { ok: true };
+  return { ok: true as const };
 }
 
 export async function updateProjectAction(id: string, input: unknown) {
-  await requireUser();
-  const parsed = projectRequestSchema.safeParse(input);
-  if (!parsed.success) return { ok: false, message: parsed.error.issues[0]?.message ?? "Please check the form." };
+  const ownerId = await requireUser();
+  const data = parseInput(input);
+  await updateProject(id, ownerId, data);
   revalidatePath("/portal");
   revalidatePath(`/portal/${id}`);
-  return { ok: true };
+  return { ok: true as const };
 }
 
 export async function deleteProjectAction(id: string) {
-  await requireUser();
+  const ownerId = await requireUser();
+  await deleteProject(id, ownerId);
   revalidatePath("/portal");
   revalidatePath(`/portal/${id}`);
-  return { ok: true };
+  return { ok: true as const };
 }
