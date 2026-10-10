@@ -1,4 +1,8 @@
-import type { DocumentData, Timestamp, Transaction } from "firebase-admin/firestore";
+import type {
+  DocumentData,
+  Timestamp,
+  Transaction,
+} from "firebase-admin/firestore";
 import { adminDb } from "@/lib/firebase-admin";
 import {
   PROJECT_STATUSES,
@@ -13,7 +17,10 @@ function normalizeEmail(email: string | null | undefined) {
   return email?.trim().toLowerCase() || null;
 }
 
-export function getStableOwnerId(_email: string | null | undefined, fallbackId: string) {
+export function getStableOwnerId(
+  _email: string | null | undefined,
+  fallbackId: string,
+) {
   return fallbackId;
 }
 
@@ -31,12 +38,21 @@ function toDate(value: unknown) {
 }
 
 function isProjectStatus(value: unknown): value is ProjectStatus {
-  return typeof value === "string" && PROJECT_STATUSES.includes(value as ProjectStatus);
+  return (
+    typeof value === "string" &&
+    PROJECT_STATUSES.includes(value as ProjectStatus)
+  );
 }
 
-function mapHistory(value: unknown, fallbackStatus: ProjectStatus, createdAt: Date): ProjectStatusHistoryItem[] {
+function mapHistory(
+  value: unknown,
+  fallbackStatus: ProjectStatus,
+  createdAt: Date,
+): ProjectStatusHistoryItem[] {
   if (!Array.isArray(value)) {
-    return [{ status: fallbackStatus, changedAt: createdAt, changedBy: "System" }];
+    return [
+      { status: fallbackStatus, changedAt: createdAt, changedBy: "System" },
+    ];
   }
 
   return value
@@ -48,7 +64,8 @@ function mapHistory(value: unknown, fallbackStatus: ProjectStatus, createdAt: Da
       return {
         status,
         changedAt: toDate(record.changedAt),
-        changedBy: typeof record.changedBy === "string" ? record.changedBy : "System",
+        changedBy:
+          typeof record.changedBy === "string" ? record.changedBy : "System",
       };
     })
     .filter((item): item is ProjectStatusHistoryItem => item !== null);
@@ -93,7 +110,11 @@ async function migrateLegacyProjects(owner: Owner, stableOwnerId: string) {
   for (const item of legacySnapshot.docs) {
     const data = item.data();
     if (data.ownerId === stableOwnerId && data.ownerEmail === email) continue;
-    if (typeof data.ownerEmail === "string" && normalizeEmail(data.ownerEmail) !== email) continue;
+    if (
+      typeof data.ownerEmail === "string" &&
+      normalizeEmail(data.ownerEmail) !== email
+    )
+      continue;
 
     batch.update(item.ref, {
       ownerId: stableOwnerId,
@@ -120,8 +141,14 @@ export async function listProjects(owner: Owner) {
   await migrateLegacyProjects(owner, stableOwnerId);
 
   const snapshots = await Promise.all([
-    adminDb.collection("projectRequests").where("ownerId", "==", stableOwnerId).get(),
-    adminDb.collection("projectRequests").where("ownerId", "==", owner.id).get(),
+    adminDb
+      .collection("projectRequests")
+      .where("ownerId", "==", stableOwnerId)
+      .get(),
+    adminDb
+      .collection("projectRequests")
+      .where("ownerId", "==", owner.id)
+      .get(),
   ]);
 
   const seen = new Set<string>();
@@ -140,7 +167,8 @@ export async function listProjects(owner: Owner) {
 
 export async function getProject(id: string, owner: Owner) {
   const snapshot = await adminDb.collection("projectRequests").doc(id).get();
-  if (!snapshot.exists || !(await ownerMatches(snapshot.data(), owner))) return null;
+  if (!snapshot.exists || !(await ownerMatches(snapshot.data(), owner)))
+    return null;
   return mapDoc(snapshot.id, snapshot.data()!);
 }
 
@@ -163,7 +191,11 @@ export async function createProject(owner: Owner, data: ProjectRequestInput) {
   return ref.id;
 }
 
-export async function updateProject(id: string, owner: Owner, data: ProjectRequestInput) {
+export async function updateProject(
+  id: string,
+  owner: Owner,
+  data: ProjectRequestInput,
+) {
   const ref = adminDb.collection("projectRequests").doc(id);
   const current = await ref.get();
   if (!current.exists || !(await ownerMatches(current.data(), owner))) {
@@ -173,7 +205,9 @@ export async function updateProject(id: string, owner: Owner, data: ProjectReque
   await ref.update({
     ...data,
     ownerId: getStableOwnerId(owner.email, owner.id),
-    ...(normalizeEmail(owner.email) ? { ownerEmail: normalizeEmail(owner.email) } : {}),
+    ...(normalizeEmail(owner.email)
+      ? { ownerEmail: normalizeEmail(owner.email) }
+      : {}),
     updatedAt: new Date(),
   });
 }
@@ -183,7 +217,8 @@ export async function updateProjectStatus(
   owner: Owner,
   status: ProjectStatus,
 ) {
-  if (!PROJECT_STATUSES.includes(status)) throw new Error("Invalid project status.");
+  if (!PROJECT_STATUSES.includes(status))
+    throw new Error("Invalid project status.");
 
   const ref = adminDb.collection("projectRequests").doc(id);
   const now = new Date();
@@ -201,7 +236,13 @@ export async function updateProjectStatus(
 
     const history = Array.isArray(data.statusHistory)
       ? [...data.statusHistory]
-      : [{ status: currentStatus, changedAt: data.createdAt ?? now, changedBy: "System" }];
+      : [
+          {
+            status: currentStatus,
+            changedAt: data.createdAt ?? now,
+            changedBy: "System",
+          },
+        ];
     history.push({ status, changedAt: now, changedBy });
 
     transaction.update(ref, {

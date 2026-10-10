@@ -29,6 +29,8 @@ export type ProjectStatusHistoryItem = {
   changedBy: string;
 };
 
+
+
 export type ProjectRequest = {
   id: string;
   fullName: string;
@@ -46,13 +48,13 @@ export type ProjectRequest = {
   updatedAt: Date;
 };
 
-export type ProjectRequestInput = Omit<
-  ProjectRequest,
-  | "id"
-  | "ownerId"
-  | "ownerEmail"
-  | "status"
-  | "statusHistory"
-  | "createdAt"
-  | "updatedAt"
->;
+// export type ProjectRequestInput = Omit<
+//   ProjectRequest,
+//   | "id"
+//   | "ownerId"
+//   | "ownerEmail"
+//   | "status"
+//   | "statusHistory"
+//   | "createdAt"
+//   | "updatedAt"
+// >;

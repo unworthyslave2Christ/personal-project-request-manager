@@ -1,6 +1,6 @@
 import Link from "next/link";
 import type { ProjectRequest } from "@/lib/project-request-types";
-
+// TO ADD
 const statusStyles: Record<string, string> = {
   new: "bg-blue-50 text-blue-700",
   reviewing: "bg-amber-50 text-amber-700",
@@ -29,6 +29,7 @@ export function ProjectCard({ project }: { project: ProjectRequest }) {
         <span
           className={`rounded-full px-3 py-1 text-xs font-bold capitalize ${statusStyles[project.status] ?? "bg-slate-100 text-slate-700"}`}
         >
+          {/* TO ADD */}
           {project.status.replace("_", " ")}
         </span>
       </div>

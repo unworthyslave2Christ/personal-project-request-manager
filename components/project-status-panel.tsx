@@ -48,7 +48,11 @@ export function ProjectStatusPanel({ project }: { project: ProjectRequest }) {
       await updateProjectStatusAction(project.id, status);
       setSaved(true);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Unable to update the request status.");
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Unable to update the request status.",
+      );
       setStatus(project.status);
     } finally {
       setPending(false);
@@ -60,11 +64,19 @@ export function ProjectStatusPanel({ project }: { project: ProjectRequest }) {
       <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
         <div className="flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between">
           <div>
-            <p className="text-xs font-bold uppercase tracking-[0.16em] text-slate-400">Request lifecycle</p>
-            <h2 className="mt-2 text-xl font-black tracking-tight text-slate-950">Project status</h2>
-            <p className="mt-1 text-sm leading-6 text-slate-500">Track where this request currently sits in the delivery process.</p>
+            <p className="text-xs font-bold uppercase tracking-[0.16em] text-slate-400">
+              Request lifecycle
+            </p>
+            <h2 className="mt-2 text-xl font-black tracking-tight text-slate-950">
+              Project status
+            </h2>
+            <p className="mt-1 text-sm leading-6 text-slate-500">
+              Track where this request currently sits in the delivery process.
+            </p>
           </div>
-          <span className={`w-fit rounded-full px-3 py-1.5 text-xs font-bold ring-1 ${statusClasses[status]}`}>
+          <span
+            className={`w-fit rounded-full px-3 py-1.5 text-xs font-bold ring-1 ${statusClasses[status]}`}
+          >
             {label(status)}
           </span>
         </div>
@@ -76,22 +88,39 @@ export function ProjectStatusPanel({ project }: { project: ProjectRequest }) {
                 const active = item === status;
                 const complete = !isExceptional && currentIndex > index;
                 return (
-                  <div key={item} className="relative flex flex-1 flex-col items-center text-center">
+                  <div
+                    key={item}
+                    className="relative flex flex-1 flex-col items-center text-center"
+                  >
                     {index < trackerStatuses.length - 1 && (
-                      <span className={`absolute left-1/2 top-3 h-px w-full ${complete ? "bg-slate-950" : "bg-slate-200"}`} />
+                      <span
+                        className={`absolute left-1/2 top-3 h-px w-full ${complete ? "bg-slate-950" : "bg-slate-200"}`}
+                      />
                     )}
-                    <span className={`relative z-10 grid size-6 place-items-center rounded-full border-2 text-[10px] font-black ${
-                      active ? "border-slate-950 bg-slate-950 text-white" : complete ? "border-slate-950 bg-white text-slate-950" : "border-slate-200 bg-white text-slate-400"
-                    }`}>
+                    <span
+                      className={`relative z-10 grid size-6 place-items-center rounded-full border-2 text-[10px] font-black ${
+                        active
+                          ? "border-slate-950 bg-slate-950 text-white"
+                          : complete
+                            ? "border-slate-950 bg-white text-slate-950"
+                            : "border-slate-200 bg-white text-slate-400"
+                      }`}
+                    >
                       {complete ? "✓" : index + 1}
                     </span>
-                    <span className={`mt-3 text-xs font-bold ${active ? "text-slate-950" : "text-slate-500"}`}>{label(item)}</span>
+                    <span
+                      className={`mt-3 text-xs font-bold ${active ? "text-slate-950" : "text-slate-500"}`}
+                    >
+                      {label(item)}
+                    </span>
                   </div>
                 );
               })}
             </div>
             {isExceptional && (
-              <div className={`mt-5 rounded-2xl px-4 py-3 text-sm font-semibold ${status === "on_hold" ? "bg-orange-50 text-orange-800" : "bg-red-50 text-red-800"}`}>
+              <div
+                className={`mt-5 rounded-2xl px-4 py-3 text-sm font-semibold ${status === "on_hold" ? "bg-orange-50 text-orange-800" : "bg-red-50 text-red-800"}`}
+              >
                 {PROJECT_STATUS_META[status].description}.
               </div>
             )}
@@ -103,14 +132,26 @@ export function ProjectStatusPanel({ project }: { project: ProjectRequest }) {
               const complete = !isExceptional && currentIndex > index;
               return (
                 <div key={item} className="flex items-center gap-3">
-                  <span className={`grid size-7 shrink-0 place-items-center rounded-full border-2 text-[10px] font-black ${
-                    active ? "border-slate-950 bg-slate-950 text-white" : complete ? "border-slate-950 text-slate-950" : "border-slate-200 text-slate-400"
-                  }`}>
+                  <span
+                    className={`grid size-7 shrink-0 place-items-center rounded-full border-2 text-[10px] font-black ${
+                      active
+                        ? "border-slate-950 bg-slate-950 text-white"
+                        : complete
+                          ? "border-slate-950 text-slate-950"
+                          : "border-slate-200 text-slate-400"
+                    }`}
+                  >
                     {complete ? "✓" : index + 1}
                   </span>
                   <div>
-                    <p className={`text-sm font-bold ${active ? "text-slate-950" : "text-slate-500"}`}>{label(item)}</p>
-                    <p className="text-xs text-slate-400">{PROJECT_STATUS_META[item].description}</p>
+                    <p
+                      className={`text-sm font-bold ${active ? "text-slate-950" : "text-slate-500"}`}
+                    >
+                      {label(item)}
+                    </p>
+                    <p className="text-xs text-slate-400">
+                      {PROJECT_STATUS_META[item].description}
+                    </p>
                   </div>
                 </div>
               );
@@ -131,7 +172,9 @@ export function ProjectStatusPanel({ project }: { project: ProjectRequest }) {
                 className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-medium text-slate-900 outline-none focus:border-slate-500 focus:ring-4 focus:ring-slate-100"
               >
                 {PROJECT_STATUSES.map((item) => (
-                  <option key={item} value={item}>{label(item)}</option>
+                  <option key={item} value={item}>
+                    {label(item)}
+                  </option>
                 ))}
               </select>
             </label>
@@ -144,25 +187,55 @@ export function ProjectStatusPanel({ project }: { project: ProjectRequest }) {
               {pending ? "Updating…" : "Update status"}
             </button>
           </div>
-          {error && <p role="alert" className="mt-3 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">{error}</p>}
-          {saved && <p role="status" className="mt-3 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-700">Status updated successfully.</p>}
+          {error && (
+            <p
+              role="alert"
+              className="mt-3 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700"
+            >
+              {error}
+            </p>
+          )}
+          {saved && (
+            <p
+              role="status"
+              className="mt-3 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-700"
+            >
+              Status updated successfully.
+            </p>
+          )}
         </div>
       </div>
 
       <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
-        <p className="text-xs font-bold uppercase tracking-[0.16em] text-slate-400">Activity</p>
-        <h2 className="mt-2 text-xl font-black tracking-tight text-slate-950">Status history</h2>
+        <p className="text-xs font-bold uppercase tracking-[0.16em] text-slate-400">
+          Activity
+        </p>
+        <h2 className="mt-2 text-xl font-black tracking-tight text-slate-950">
+          Status history
+        </h2>
         <div className="mt-6 space-y-0">
           {project.statusHistory.map((item, index) => (
-            <div key={`${item.status}-${item.changedAt.getTime()}-${index}`} className="relative flex gap-4 pb-6 last:pb-0">
-              {index < project.statusHistory.length - 1 && <span className="absolute left-2.5 top-6 h-full w-px bg-slate-200" />}
-              <span className="relative z-10 mt-1 grid size-5 shrink-0 place-items-center rounded-full border border-slate-300 bg-white text-[9px] text-slate-500">✓</span>
+            <div
+              key={`${item.status}-${item.changedAt.getTime()}-${index}`}
+              className="relative flex gap-4 pb-6 last:pb-0"
+            >
+              {index < project.statusHistory.length - 1 && (
+                <span className="absolute left-2.5 top-6 h-full w-px bg-slate-200" />
+              )}
+              <span className="relative z-10 mt-1 grid size-5 shrink-0 place-items-center rounded-full border border-slate-300 bg-white text-[9px] text-slate-500">
+                ✓
+              </span>
               <div className="min-w-0">
-                <p className="text-sm font-bold text-slate-900">{label(item.status)}</p>
-                <p className="mt-1 text-xs leading-5 text-slate-500">
-                  {PROJECT_STATUS_META[item.status].description} · {item.changedAt.toLocaleString()}
+                <p className="text-sm font-bold text-slate-900">
+                  {label(item.status)}
                 </p>
-                <p className="mt-1 text-xs font-medium text-slate-400">Changed by {item.changedBy}</p>
+                <p className="mt-1 text-xs leading-5 text-slate-500">
+                  {PROJECT_STATUS_META[item.status].description} ·{" "}
+                  {item.changedAt.toLocaleString()}
+                </p>
+                <p className="mt-1 text-xs font-medium text-slate-400">
+                  Changed by {item.changedBy}
+                </p>
               </div>
             </div>
           ))}
